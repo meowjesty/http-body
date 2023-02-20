@@ -3,6 +3,7 @@ use std::{
     task::{Context, Poll},
 };
 
+use bytes::Buf;
 use futures_util::Future;
 use http_body::Body;
 use pin_project_lite::pin_project;
@@ -35,7 +36,13 @@ impl<T: Body + ?Sized> Future for Collect<T> {
                 return Poll::Ready(Ok(me.collected.take().expect("polled after complete")));
             };
 
-            me.collected.as_mut().unwrap().push_frame(frame);
+            if frame
+                .data_ref()
+                .map(|data| data.has_remaining())
+                .unwrap_or_default()
+            {
+                me.collected.as_mut().unwrap().push_frame(frame);
+            }
         }
     }
 }
