@@ -38,11 +38,7 @@ impl<T: Body + ?Sized> Future for Collect<T> {
                 return Poll::Ready(Ok(me.collected.take().expect("polled after complete")));
             };
 
-            if frame
-                .data_ref()
-                .map(|data| data.has_remaining())
-                .unwrap_or_default()
-            {
+            if frame.data_ref().map(Buf::has_remaining).unwrap_or_default() {
                 me.collected.as_mut().unwrap().push_frame(frame);
             }
         }
